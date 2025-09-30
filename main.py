@@ -351,33 +351,60 @@ if __name__ == '__main__':
         send_message(user, accessToken, city, weather, max_temperature, min_temperature)
         isPost = True
     # 课程提醒推送
+    # 修改课程提醒部分的代码：
+    # 课程提醒推送
     todayClasses = get_Today_Class()
     time_table = config.time_table
     for i in range(len(time_table)):
         if isPost:
             break
         reminderTime = time_table[i]
+        print(f"处理第{i+1}节课，目标时间: {reminderTime}")
+        
         while True:
             nowTime = datetime.now().strftime('%H:%M:%S')
             print("当前时间:", nowTime)
-            # 修改为（允许1秒误差）
-            if abs(calculate_Time_Difference(reminderTime, nowTime)) <= 5:
+            
+            # 新的时间匹配逻辑
+            def time_diff_seconds(time1, time2):
+                """计算两个时间字符串的差值（秒）"""
+                h1, m1, s1 = map(int, time1.split(':'))
+                h2, m2, s2 = map(int, time2.split(':'))
+                
+                total1 = h1 * 3600 + m1 * 60 + s1
+                total2 = h2 * 3600 + m2 * 60 + s2
+                
+                return total1 - total2
+            
+            time_diff = time_diff_seconds(reminderTime, nowTime)
+            print(f"时间差: {time_diff} 秒")
+            
+            # 在目标时间前后3秒内都算匹配
+            if -3 <= time_diff <= 3:
+                print(f"时间匹配！发送第{i+1}节课提醒")
                 if len(todayClasses[i]) != 0:
                     classInfo = "课程信息: " + todayClasses[i] + "\n" + "上课时间: " + config.course_Time[i] + "\n"
                     print(classInfo)
                     send_Class_Message(user, accessToken, classInfo)
                     print("课程信息推送成功！")
+                else:
+                    print(f"第{i+1}节课无课程安排")
                 isPost = True
                 break
-            elif reminderTime < nowTime:
+            elif time_diff < -10:  # 时间过了10秒以上
+                print(f"第{i+1}节课时间已过，跳过")
                 break
-            # 通过睡眠定时
-            defference = calculate_Time_Difference(reminderTime, nowTime) - 3
-            print("课程推送时间差：", defference, "秒")
-            if defference > 0:
-                print("开始睡眠: 等待推送第", i + 1, "讲课")
-                time.sleep(defference)
-                print("结束睡眠")
+            else:
+                # 智能等待
+                if time_diff > 60:
+                    sleep_time = time_diff - 5
+                    print(f"课程推送时间差：{time_diff} 秒")
+                    print(f"开始睡眠: 等待推送第{i + 1}节课")
+                    time.sleep(sleep_time)
+                    print("结束睡眠")
+                else:
+                    # 最后1分钟内，短间隔检查
+                    time.sleep(0.5)
     while True:
         goodNightTime = config.good_Night_Time
         nowTime = datetime.now().strftime('%H:%M:%S')
@@ -398,4 +425,5 @@ if __name__ == '__main__':
             print("开始睡眠:等待推送晚安心语")
             time.sleep(defference)
             print("结束睡眠")
+
 
