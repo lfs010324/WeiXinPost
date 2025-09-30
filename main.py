@@ -360,7 +360,8 @@ if __name__ == '__main__':
         while True:
             nowTime = datetime.now().strftime('%H:%M:%S')
             print("当前时间:", nowTime)
-            if reminderTime == nowTime:
+            # 修改为（允许1秒误差）
+            if abs(calculate_Time_Difference(reminderTime, nowTime)) <= 5:
                 if len(todayClasses[i]) != 0:
                     classInfo = "课程信息: " + todayClasses[i] + "\n" + "上课时间: " + config.course_Time[i] + "\n"
                     print(classInfo)
@@ -397,3 +398,4 @@ if __name__ == '__main__':
             print("开始睡眠:等待推送晚安心语")
             time.sleep(defference)
             print("结束睡眠")
+
